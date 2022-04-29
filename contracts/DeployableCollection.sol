@@ -15,6 +15,8 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
   address public _collectionOwner;
   bytes32 public constant MOD_ROLE = keccak256(abi.encode('MOD'));
   bytes32 public _category;
+  address payable public _paymentReceiver;
+  mapping(address => bool) public _acceptedCurrency;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMINS');
@@ -30,10 +32,16 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     string memory name_,
     string memory symbol_,
     address collectionOwner_,
-    string memory category_
+    string memory category_,
+    address paymentReceiver_,
+    address[] memory acceptedCurrencies_
   ) ERC721(name_, symbol_) {
     _collectionOwner = collectionOwner_;
     _category = keccak256(abi.encode(category_));
+    _paymentReceiver = payable(paymentReceiver_);
+
+    for (uint256 i = 0; i < acceptedCurrencies_.length; i++) _acceptedCurrency[acceptedCurrencies_[i]] = true;
+
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
   }
