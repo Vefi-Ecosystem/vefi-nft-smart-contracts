@@ -19,12 +19,12 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
   mapping(address => bool) public _acceptedCurrency;
 
   modifier onlyAdmin() {
-    require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMINS');
+    require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
     _;
   }
 
   modifier onlyMod() {
-    require(hasRole(MOD_ROLE, _msgSender()), 'ONLY_MODS');
+    require(hasRole(MOD_ROLE, _msgSender()), 'ONLY_MOD');
     _;
   }
 
