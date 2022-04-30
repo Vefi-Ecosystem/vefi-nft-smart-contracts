@@ -49,9 +49,9 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
     address _collection;
 
     assembly {
-      _collection := create2(0, add(_byteCode, 0x20), mload(_byteCode), _salt)
+      _collection := create2(0, add(_byteCode, 32), mload(_byteCode), _salt)
     }
     _collectionState[_collection] = true;
-    emit CollectionDeployed(_collection, _msgSender(), block.timestamp);
+    emit CollectionDeployed(_collection, _msgSender(), block.timestamp, name_, category_, symbol_);
   }
 }

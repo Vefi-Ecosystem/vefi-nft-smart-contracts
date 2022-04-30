@@ -7,7 +7,14 @@ interface IMarketPlace {
     CANCELLED
   }
 
-  event CollectionDeployed(address _collection, address indexed _owner, uint256 timestamp);
+  event CollectionDeployed(
+    address _collection,
+    address indexed _owner,
+    uint256 timestamp,
+    string _name,
+    string _category,
+    string _symbol
+  );
   event MarketItemCreated(
     address indexed _creator,
     address indexed _collection,
