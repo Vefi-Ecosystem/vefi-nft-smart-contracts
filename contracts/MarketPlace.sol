@@ -6,8 +6,9 @@ import '@openzeppelin/contracts/access/AccessControl.sol';
 import '@openzeppelin/contracts/utils/Context.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import './interfaces/IDeployableCollection.sol';
+import './interfaces/IMarketPlace.sol';
 
-contract MarketPlace is Context, AccessControl, ReentrancyGuard {
+contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
   using Counters for Counters.Counter;
 
   Counters.Counter private _itemsSold;
