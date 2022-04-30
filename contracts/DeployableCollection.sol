@@ -46,14 +46,14 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
   }
 
-  function mintFor(string memory _tokenURI, address to) external onlyMod returns (uint256 _tokenId) {
+  function mintFor(string memory _tokenURI, address to) external onlyMod nonReentrant returns (uint256 _tokenId) {
     _tokenIds.increment();
     _tokenId = _tokenIds.current();
     _mint(to, _tokenId);
     _setTokenURI(_tokenId, _tokenURI);
   }
 
-  function burnFor(uint256 _tokenId) external onlyMod {
+  function burnFor(uint256 _tokenId) external onlyMod nonReentrant {
     require(_exists(_tokenId), 'TOKEN_DOES_NOT_EXIST');
     _burn(_tokenId);
   }
@@ -64,6 +64,11 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
 
   function _addMod(address _mod) external onlyAdmin returns (bool) {
     _grantRole(MOD_ROLE, _mod);
+    return true;
+  }
+
+  function _removeMod(address _mod) external onlyAdmin returns (bool) {
+    _revokeRole(MOD_ROLE, _mod);
     return true;
   }
 }

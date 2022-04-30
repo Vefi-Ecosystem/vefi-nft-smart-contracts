@@ -5,6 +5,8 @@ interface IDeployableCollection {
 
   function _addMod(address _mod) external returns (bool);
 
+  function _removeMod(address _mod) external returns (bool);
+
   function _category() external view returns (bytes32);
 
   function _paymentReceiver() external view returns (address payable);
