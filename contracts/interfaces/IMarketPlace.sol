@@ -1,6 +1,12 @@
 pragma solidity ^0.8.0;
 
 interface IMarketPlace {
+  enum MarketItemStatus {
+    ON_GOING,
+    FINALIZED,
+    CANCELLED
+  }
+
   event MarketItemCreated(
     address indexed _creator,
     address indexed _collection,
@@ -23,7 +29,7 @@ interface IMarketPlace {
     uint256 _totalBidsMade,
     uint256 _price
   );
-  event BidUpdated(uint256 indexed _tokenId, uint256 _newPrice, uint256 timestamp);
+  event BidUpdated(address indexed _createdBy, uint256 indexed _tokenId, uint256 _newPrice, uint256 timestamp);
   event SaleMade(
     address indexed _seller,
     address indexed _buyer,
@@ -38,6 +44,13 @@ interface IMarketPlace {
     address payable _paymentReceiver;
     address _currency;
     uint256 _price;
-    bool _finalized;
+    MarketItemStatus _status;
+  }
+
+  struct BidItem {
+    address _createdBy;
+    address _receiver;
+    uint256 _bidAmount;
+    uint256 _tokenId;
   }
 }
