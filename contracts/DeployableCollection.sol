@@ -17,6 +17,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
   bytes32 public _category;
   address payable public _paymentReceiver;
   mapping(address => bool) public _acceptedCurrency;
+  mapping(address => uint256) public lastMintedForIDs;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -51,6 +52,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     _tokenId = _tokenIds.current();
     _mint(to, _tokenId);
     _setTokenURI(_tokenId, _tokenURI);
+    lastMintedForIDs[to] = _tokenId;
   }
 
   function burnFor(uint256 _tokenId) external onlyMod nonReentrant {

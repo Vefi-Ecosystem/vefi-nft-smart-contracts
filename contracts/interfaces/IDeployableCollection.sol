@@ -14,4 +14,6 @@ interface IDeployableCollection {
   function _acceptedCurrency(address) external returns (bool);
 
   function mintFor(string memory _tokenURI, address to) external returns (uint256);
+
+  function lastMintedForIDs(address to) external view returns (uint256);
 }

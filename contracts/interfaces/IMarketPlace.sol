@@ -15,6 +15,8 @@ interface IMarketPlace {
 
   function _percentageForCollectionOwners() external view returns (int256);
 
+  function _collectionDeployFeeInEther() external view returns (uint256);
+
   enum MarketItemStatus {
     ON_GOING,
     FINALIZED,
@@ -29,12 +31,14 @@ interface IMarketPlace {
     string _category,
     string _symbol
   );
+  event Mint(address _collection, uint256 _tokenId, uint256 timestamp, string _tokenURI);
   event MarketItemCreated(
     address indexed _creator,
     address indexed _collection,
     uint256 _tokenId,
     address _currency,
-    uint256 _startingPriceInEther
+    uint256 _startingPriceInEther,
+    bytes32 _marketItemId
   );
   event MarketItemEnded(
     address indexed _creator,
