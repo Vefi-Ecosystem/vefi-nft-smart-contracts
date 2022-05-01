@@ -50,6 +50,7 @@ interface IMarketPlace {
   struct MarketItem {
     address _creator;
     address payable _paymentReceiver;
+    uint256 _tokenId;
     address _currency;
     uint256 _price;
     MarketItemStatus _status;
