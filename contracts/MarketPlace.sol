@@ -51,13 +51,17 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
   constructor(
     address utilityToken_,
     uint256 requiredHold_,
-    uint256 mintFeeInEther_
+    uint256 mintFeeInEther_,
+    int256 percentageDiscount_,
+    int256 percentageForCollectionOwners_
   ) {
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
     _utilityToken = utilityToken_;
     _requiredHold = requiredHold_;
     _mintFeeInEther = mintFeeInEther_;
+    _percentageDiscount = percentageDiscount_;
+    _percentageForCollectionOwners = percentageForCollectionOwners_;
   }
 
   function deployCollection(

@@ -1,6 +1,20 @@
 pragma solidity ^0.8.0;
 
 interface IMarketPlace {
+  function _collectionState(address collection) external view returns (bool);
+
+  function _collectionAllowed(address collection) external view returns (bool);
+
+  function _utilityToken() external view returns (address);
+
+  function _requiredHold() external view returns (uint256);
+
+  function _mintFeeInEther() external view returns (uint256);
+
+  function _percentageDiscount() external view returns (int256);
+
+  function _percentageForCollectionOwners() external view returns (int256);
+
   enum MarketItemStatus {
     ON_GOING,
     FINALIZED,
