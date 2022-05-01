@@ -140,8 +140,20 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _status: MarketItemStatus.ON_GOING
     });
 
-    emit MarketItemCreated(_msgSender(), collection, _tokenId, _currency, _price, marketItemId);
+    emit MarketItemCreated(_msgSender(), collection, _tokenId, _currency, _price, marketItemId, block.timestamp);
   }
+
+  function cancelAuction(bytes32 marketId) external {
+    MarketItem storage _marketItem = _auctions[marketId];
+    require(_marketItem._creator == _msgSender(), 'NOT_MARKET_ITEM_CREATOR');
+    _marketItem._creator = address(0);
+    _marketItem._paymentReceiver = payable(address(0));
+    _marketItem._status = MarketItemStatus.CANCELLED;
+
+    emit MarketItemCancelled(marketId, block.timestamp);
+  }
+
+  function bidItem(bytes32 _marketId) external {}
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
     (bool success, ) = to.call{value: _value}(new bytes(0));

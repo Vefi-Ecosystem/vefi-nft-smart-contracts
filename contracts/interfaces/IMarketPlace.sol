@@ -38,7 +38,8 @@ interface IMarketPlace {
     uint256 _tokenId,
     address _currency,
     uint256 _startingPriceInEther,
-    bytes32 _marketItemId
+    bytes32 _marketItemId,
+    uint256 timestamp
   );
   event MarketItemEnded(
     address indexed _creator,
@@ -47,6 +48,7 @@ interface IMarketPlace {
     address _currency,
     uint256 _finalPriceInEther
   );
+  event MarketItemCancelled(bytes32 marketId, uint256 timestamp);
   event BidCreated(
     address indexed _createdBy,
     uint256 indexed _tokenId,
