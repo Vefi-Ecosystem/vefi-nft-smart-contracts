@@ -21,6 +21,7 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
 
   bytes32 public MOD_ROLE = keccak256(abi.encode('MOD'));
   mapping(address => bool) public _collectionState;
+  mapping(address => bool) public _collectionAllowed;
   address public _utilityToken;
   uint256 public _requiredHold;
   uint256 public _mintFeeInEther;
@@ -34,6 +35,16 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
 
   modifier onlyMod() {
     require(hasRole(MOD_ROLE, _msgSender()), 'ONLY_MOD');
+    _;
+  }
+
+  modifier onlyActiveCollection(address collection) {
+    require(_collectionState[collection], 'COLLECTION_NOT_ACTIVE');
+    _;
+  }
+
+  modifier onlyAllowedCollection(address collection) {
+    require(_collectionAllowed[collection], 'COLLECTION_NOT_ALLOWED');
     _;
   }
 
@@ -67,10 +78,18 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
       _collection := create2(0, add(_byteCode, 32), mload(_byteCode), _salt)
     }
     _collectionState[_collection] = true;
+    _collectionAllowed[_collection] = true;
     emit CollectionDeployed(_collection, _msgSender(), block.timestamp, name_, category_, symbol_);
   }
 
-  function mintNFT(address collection, string memory tokenURI_) external payable nonReentrant returns (bool) {
+  function mintNFT(address collection, string memory tokenURI_)
+    external
+    payable
+    nonReentrant
+    onlyActiveCollection(collection)
+    onlyAllowedCollection(collection)
+    returns (bool)
+  {
     uint256 _fee = IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
       ? _mintFeeInEther.sub((uint256(_percentageDiscount).mul(_mintFeeInEther)).div(100))
       : _mintFeeInEther;
@@ -81,6 +100,7 @@ contract MarketPlace is IMarketPlace, Context, AccessControl, ReentrancyGuard {
     uint256 _feeForOwner = (uint256(_percentageForCollectionOwners).mul(_fee)).div(100);
     require(_safeMintFor(collection, tokenURI_, _msgSender()), 'COULD_NOT_MINT');
     require(_safeTransferETH(_owner, _feeForOwner), 'COULD_NOT_TRANSFER_ETHER');
+    return true;
   }
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
