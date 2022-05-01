@@ -54,7 +54,6 @@ interface IMarketPlace {
     uint256 indexed _tokenId,
     address indexed _collection,
     uint256 timestamp,
-    uint256 _totalBidsMade,
     uint256 _price
   );
   event BidUpdated(address indexed _createdBy, uint256 indexed _tokenId, uint256 _newPrice, uint256 timestamp);
@@ -73,6 +72,7 @@ interface IMarketPlace {
     uint256 _tokenId;
     address _currency;
     uint256 _price;
+    address _collection;
     MarketItemStatus _status;
   }
 
@@ -80,6 +80,6 @@ interface IMarketPlace {
     address _createdBy;
     address _receiver;
     uint256 _bidAmount;
-    uint256 _tokenId;
+    MarketItemStatus _status;
   }
 }

@@ -31,6 +31,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   int256 public _percentageDiscount;
   int256 public _percentageForCollectionOwners;
   mapping(bytes32 => MarketItem) public _auctions;
+  mapping(bytes32 => BidItem) public _bids;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -137,7 +138,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _tokenId: _tokenId,
       _currency: _currency,
       _price: _price,
-      _status: MarketItemStatus.ON_GOING
+      _status: MarketItemStatus.ON_GOING,
+      _collection: collection
     });
 
     emit MarketItemCreated(_msgSender(), collection, _tokenId, _currency, _price, marketItemId, block.timestamp);
@@ -153,7 +155,35 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit MarketItemCancelled(marketId, block.timestamp);
   }
 
-  function bidItem(bytes32 _marketId) external {}
+  function bidItem(
+    bytes32 _marketId,
+    address _receiver,
+    uint256 _bidAmount
+  ) external {
+    require(_auctions[_marketId]._status == MarketItemStatus.ON_GOING, 'CANCELLED_OR_FINALIZED');
+    BidItem storage _bidItem = _bids[_marketId];
+
+    if (_bidItem._createdBy == address(0)) {
+      _bidItem._createdBy = _msgSender();
+      _bidItem._bidAmount = _bidAmount;
+      _bidItem._receiver = _receiver;
+      _bidItem._status = MarketItemStatus.ON_GOING;
+      emit BidCreated(
+        _bidItem._createdBy,
+        _auctions[_marketId]._tokenId,
+        _auctions[_marketId]._collection,
+        block.timestamp,
+        _bidAmount
+      );
+    } else {
+      require(_bidItem._bidAmount < _bidAmount, 'BID_MUST_BE_HIGHER_THAN_PREVIOUS_ONE');
+      _bidItem._createdBy = _msgSender();
+      _bidItem._bidAmount = _bidAmount;
+      _bidItem._status = MarketItemStatus.ON_GOING;
+      _bidItem._receiver = _receiver;
+      emit BidUpdated(_bidItem._createdBy, _auctions[_marketId]._tokenId, _bidAmount, block.timestamp);
+    }
+  }
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
     (bool success, ) = to.call{value: _value}(new bytes(0));
