@@ -163,6 +163,13 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     require(_auctions[_marketId]._status == MarketItemStatus.ON_GOING, 'CANCELLED_OR_FINALIZED');
     BidItem storage _bidItem = _bids[_marketId];
 
+    if (_auctions[_marketId]._currency != address(0)) {
+      require(
+        IERC20(_auctions[_marketId]._currency).allowance(_msgSender(), address(this)) >= _bidAmount,
+        'NO_ALLOWANCE'
+      );
+    }
+
     if (_bidItem._createdBy == address(0)) {
       _bidItem._createdBy = _msgSender();
       _bidItem._bidAmount = _bidAmount;
