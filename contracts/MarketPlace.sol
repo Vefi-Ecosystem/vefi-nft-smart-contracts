@@ -81,12 +81,13 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     string memory name_,
     string memory symbol_,
     string memory category_,
-    address paymentReceiver_
+    address paymentReceiver_,
+    string memory _imageURI
   ) external payable nonReentrant {
     require(msg.value >= _collectionDeployFeeInEther, 'FEE_TOO_LOW');
     bytes memory _byteCode = abi.encodePacked(
       type(DeployableCollection).creationCode,
-      abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_)
+      abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_, _imageURI)
     );
     bytes32 _salt = keccak256(abi.encode(name_, _msgSender()));
     address _collection;

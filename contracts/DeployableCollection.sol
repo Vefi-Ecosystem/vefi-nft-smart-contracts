@@ -16,6 +16,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
   bytes32 public constant MOD_ROLE = keccak256(abi.encode('MOD'));
   bytes32 public _category;
   address payable public _paymentReceiver;
+  string public _imageURI;
   mapping(address => uint256) public lastMintedForIDs;
 
   modifier onlyAdmin() {
@@ -33,11 +34,13 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     string memory symbol_,
     address collectionOwner_,
     string memory category_,
-    address paymentReceiver_
+    address paymentReceiver_,
+    string memory imageURI_
   ) ERC721(name_, symbol_) {
     _collectionOwner = collectionOwner_;
     _category = keccak256(abi.encode(category_));
     _paymentReceiver = payable(paymentReceiver_);
+    _imageURI = imageURI_;
 
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setupRole(MOD_ROLE, _msgSender());
