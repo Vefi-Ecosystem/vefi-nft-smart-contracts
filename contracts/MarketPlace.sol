@@ -19,6 +19,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   Counters.Counter private _itemsSold;
   Counters.Counter private _collectionsDeployed;
   Counters.Counter private _totalNfts;
+  Counters.Counter private _offersMade;
 
   bytes32 public MOD_ROLE = keccak256(abi.encode('MOD'));
   mapping(address => bool) public _collectionState;
@@ -31,6 +32,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   int256 public _percentageDiscount;
   int256 public _percentageForCollectionOwners;
   mapping(bytes32 => MarketItem) public _auctions;
+  mapping(bytes32 => OfferItem) public _offers;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -63,6 +65,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   ) {
     require(IERC20(utilityToken_).totalSupply() > requiredHold_, 'REQUIRED_HOLD_MUST_BE_LESS_THAN_TOTAL_SUPPLY');
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(MOD_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
     _utilityToken = utilityToken_;
     _requiredHold = requiredHold_;
@@ -121,6 +124,33 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     return true;
   }
 
+  function destroyNFT(address collection, uint256 tokenId)
+    external
+    nonReentrant
+    onlyActiveCollection(collection)
+    onlyAllowedCollection(collection)
+    onlyMod
+  {
+    IDeployableCollection(collection).burn(tokenId);
+    emit Burn(collection, tokenId, block.timestamp);
+  }
+
+  function disallowCollection(address collection) external onlyMod onlyActiveCollection(collection) {
+    _collectionAllowed[collection] = false;
+  }
+
+  function deactivateCollection(address collection) external onlyMod onlyAllowedCollection(collection) {
+    _collectionState[collection] = false;
+  }
+
+  function activateCollection(address collection) external onlyAllowedCollection(collection) onlyMod {
+    _collectionState[collection] = true;
+  }
+
+  function allowCollection(address collection) external onlyActiveCollection(collection) onlyMod {
+    _collectionAllowed[collection] = true;
+  }
+
   function placeForSale(
     uint256 _tokenId,
     address collection,
@@ -142,8 +172,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _status: MarketItemStatus.ON_GOING,
       _collection: collection
     });
-
     emit MarketItemCreated(_msgSender(), collection, _tokenId, _currency, _price, marketItemId, block.timestamp);
+    return true;
   }
 
   function cancelSale(bytes32 marketId) external {

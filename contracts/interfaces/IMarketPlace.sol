@@ -32,6 +32,7 @@ interface IMarketPlace {
     string _symbol
   );
   event Mint(address _collection, uint256 _tokenId, uint256 timestamp, string _tokenURI);
+  event Burn(address _collection, uint256 _tokenId, uint256 timestamp);
   event MarketItemCreated(
     address indexed _creator,
     address indexed _collection,
@@ -66,5 +67,14 @@ interface IMarketPlace {
     uint256 _price;
     address _collection;
     MarketItemStatus _status;
+  }
+
+  struct OfferItem {
+    address _creator;
+    address _recipient;
+    address _collection;
+    uint256 _tokenId;
+    address _token;
+    uint256 _bidAmount;
   }
 }

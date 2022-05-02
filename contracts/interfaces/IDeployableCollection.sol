@@ -13,5 +13,7 @@ interface IDeployableCollection {
 
   function mintFor(string memory _tokenURI, address to) external returns (uint256);
 
+  function burn(uint256) external;
+
   function lastMintedForIDs(address to) external view returns (uint256);
 }

@@ -40,6 +40,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     _paymentReceiver = payable(paymentReceiver_);
 
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    _setupRole(MOD_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
   }
 
@@ -51,7 +52,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     lastMintedForIDs[to] = _tokenId;
   }
 
-  function burnFor(uint256 _tokenId) external onlyMod nonReentrant {
+  function burn(uint256 _tokenId) external onlyMod nonReentrant {
     require(_exists(_tokenId), 'TOKEN_DOES_NOT_EXIST');
     _burn(_tokenId);
   }
@@ -60,13 +61,13 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
     return super.supportsInterface(interfaceId);
   }
 
-  function _addMod(address _mod) external onlyAdmin returns (bool) {
-    _grantRole(MOD_ROLE, _mod);
+  function _addMod(address _mod) external returns (bool) {
+    grantRole(MOD_ROLE, _mod);
     return true;
   }
 
-  function _removeMod(address _mod) external onlyAdmin returns (bool) {
-    _revokeRole(MOD_ROLE, _mod);
+  function _removeMod(address _mod) external returns (bool) {
+    revokeRole(MOD_ROLE, _mod);
     return true;
   }
 }
