@@ -17,8 +17,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   using SafeMath for uint256;
 
   Counters.Counter private _itemsSold;
-  Counters.Counter private _bidsMade;
   Counters.Counter private _collectionsDeployed;
+  Counters.Counter private _totalNfts;
 
   bytes32 public MOD_ROLE = keccak256(abi.encode('MOD'));
   mapping(address => bool) public _collectionState;
@@ -31,7 +31,6 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   int256 public _percentageDiscount;
   int256 public _percentageForCollectionOwners;
   mapping(bytes32 => MarketItem) public _auctions;
-  mapping(bytes32 => BidItem) public _bids;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -78,13 +77,12 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     string memory name_,
     string memory symbol_,
     string memory category_,
-    address paymentReceiver_,
-    address[] memory acceptedCurrencies_
+    address paymentReceiver_
   ) external payable nonReentrant {
     require(msg.value >= _collectionDeployFeeInEther, 'FEE_TOO_LOW');
     bytes memory _byteCode = abi.encodePacked(
       type(DeployableCollection).creationCode,
-      abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_, acceptedCurrencies_)
+      abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_)
     );
     bytes32 _salt = keccak256(abi.encode(name_, _msgSender()));
     address _collection;
@@ -94,6 +92,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     }
     _collectionState[_collection] = true;
     _collectionAllowed[_collection] = true;
+    _collectionsDeployed.increment();
     emit CollectionDeployed(_collection, _msgSender(), block.timestamp, name_, category_, symbol_);
   }
 
@@ -111,17 +110,18 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
     require(msg.value >= _fee, 'FEE_TOO_LOW');
 
-    address _owner = IDeployableCollection(collection)._collectionOwner();
+    address _paymentReceiver = IDeployableCollection(collection)._paymentReceiver();
     uint256 _feeForOwner = (uint256(_percentageForCollectionOwners).mul(_fee)).div(100);
     require(_safeMintFor(collection, tokenURI_, _msgSender()), 'COULD_NOT_MINT');
-    require(_safeTransferETH(_owner, _feeForOwner), 'COULD_NOT_TRANSFER_ETHER');
+    require(_safeTransferETH(_paymentReceiver, _feeForOwner), 'COULD_NOT_TRANSFER_ETHER');
 
     uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_msgSender());
+    _totalNfts.increment();
     emit Mint(collection, _tokenId, block.timestamp, tokenURI_);
     return true;
   }
 
-  function placeForAuction(
+  function placeForSale(
     uint256 _tokenId,
     address collection,
     address _paymentReceiver,
@@ -146,7 +146,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit MarketItemCreated(_msgSender(), collection, _tokenId, _currency, _price, marketItemId, block.timestamp);
   }
 
-  function cancelAuction(bytes32 marketId) external {
+  function cancelSale(bytes32 marketId) external {
     MarketItem storage _marketItem = _auctions[marketId];
     require(_marketItem._creator == _msgSender(), 'NOT_MARKET_ITEM_CREATOR');
     _marketItem._creator = address(0);
@@ -156,42 +156,31 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit MarketItemCancelled(marketId, block.timestamp);
   }
 
-  function bidItem(
-    bytes32 _marketId,
-    address _receiver,
-    uint256 _bidAmount
-  ) external payable nonReentrant {
-    require(_auctions[_marketId]._status == MarketItemStatus.ON_GOING, 'CANCELLED_OR_FINALIZED');
-    BidItem storage _bidItem = _bids[_marketId];
+  function buyItem(bytes32 _marketId, uint256 _buyAmount) external payable nonReentrant {
+    MarketItem storage _marketItem = _auctions[_marketId];
+    require(_marketItem._status == MarketItemStatus.ON_GOING, 'MARKET_ITEM_CLOSED');
 
-    if (_auctions[_marketId]._currency != address(0)) {
-      require(
-        IERC20(_auctions[_marketId]._currency).allowance(_msgSender(), address(this)) >= _bidAmount,
-        'NO_ALLOWANCE'
-      );
-      _safeTransferFrom(_auctions[_marketId]._currency, _msgSender(), address(this), _bidAmount);
-    }
-
-    if (_bidItem._createdBy == address(0)) {
-      _bidItem._createdBy = _msgSender();
-      _bidItem._bidAmount = _bidAmount;
-      _bidItem._receiver = _receiver;
-      _bidItem._status = MarketItemStatus.ON_GOING;
-      emit BidCreated(
-        _bidItem._createdBy,
-        _auctions[_marketId]._tokenId,
-        _auctions[_marketId]._collection,
-        block.timestamp,
-        _bidAmount
-      );
+    if (_marketItem._currency == address(0)) {
+      require(msg.value == _marketItem._price, 'NOT_EXACT_PRICE');
+      require(_buyAmount == uint256(0) || _buyAmount == msg.value, 'BID_AMOUNT_MUST_BE_ZERO_OR_EQUAL_TO_VALUE');
+      _safeTransferETH(_marketItem._paymentReceiver, msg.value);
     } else {
-      require(_bidItem._bidAmount < _bidAmount, 'BID_MUST_BE_HIGHER_THAN_PREVIOUS_ONE');
-      _bidItem._createdBy = _msgSender();
-      _bidItem._bidAmount = _bidAmount;
-      _bidItem._status = MarketItemStatus.ON_GOING;
-      _bidItem._receiver = _receiver;
-      emit BidUpdated(_bidItem._createdBy, _auctions[_marketId]._tokenId, _bidAmount, block.timestamp);
+      require(_buyAmount == _marketItem._price, 'BUY_AMOUNT_NOT_SAME_AS_PRICE');
+      require(IERC20(_marketItem._currency).balanceOf(_msgSender()) >= _buyAmount, 'NOT_ENOUGH_BALANCE');
+      require(IERC20(_marketItem._currency).allowance(_msgSender(), address(this)) >= _buyAmount, 'NO_ALLOWANCE');
+      _safeTransferFrom(_marketItem._currency, _msgSender(), _marketItem._paymentReceiver, _buyAmount);
     }
+    IERC721(_marketItem._collection).safeTransferFrom(address(this), _msgSender(), _marketItem._tokenId);
+    _marketItem._status = MarketItemStatus.FINALIZED;
+    _itemsSold.increment();
+    emit SaleMade(
+      _marketItem._creator,
+      _msgSender(),
+      _marketItem._tokenId,
+      _marketItem._collection,
+      _marketItem._currency,
+      _buyAmount
+    );
   }
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
@@ -249,6 +238,18 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   function takeAccumulatedETH() external onlyAdmin returns (bool) {
     require(_safeTransferETH(_feeReceiver, address(this).balance), 'COULD_NOT_TRANSFER_ETHER');
     return true;
+  }
+
+  function totalItemsSold() public view returns (uint256) {
+    return _itemsSold.current();
+  }
+
+  function totalDeployedCollections() public view returns (uint256) {
+    return _collectionsDeployed.current();
+  }
+
+  function totalNFTs() public view returns (uint256) {
+    return _totalNfts.current();
   }
 
   receive() external payable {}

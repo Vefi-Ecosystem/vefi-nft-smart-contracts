@@ -37,7 +37,7 @@ interface IMarketPlace {
     address indexed _collection,
     uint256 _tokenId,
     address _currency,
-    uint256 _startingPriceInEther,
+    uint256 _PriceInEther,
     bytes32 _marketItemId,
     uint256 timestamp
   );
@@ -49,14 +49,6 @@ interface IMarketPlace {
     uint256 _finalPriceInEther
   );
   event MarketItemCancelled(bytes32 marketId, uint256 timestamp);
-  event BidCreated(
-    address indexed _createdBy,
-    uint256 indexed _tokenId,
-    address indexed _collection,
-    uint256 timestamp,
-    uint256 _price
-  );
-  event BidUpdated(address indexed _createdBy, uint256 indexed _tokenId, uint256 _newPrice, uint256 timestamp);
   event SaleMade(
     address indexed _seller,
     address indexed _buyer,
@@ -73,13 +65,6 @@ interface IMarketPlace {
     address _currency;
     uint256 _price;
     address _collection;
-    MarketItemStatus _status;
-  }
-
-  struct BidItem {
-    address _createdBy;
-    address _receiver;
-    uint256 _bidAmount;
     MarketItemStatus _status;
   }
 }
