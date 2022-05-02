@@ -23,6 +23,12 @@ interface IMarketPlace {
     CANCELLED
   }
 
+  enum OrderItemStatus {
+    STARTED,
+    ACCEPTED,
+    REJECTED
+  }
+
   event CollectionDeployed(
     address _collection,
     address indexed _owner,
@@ -31,7 +37,7 @@ interface IMarketPlace {
     string _category,
     string _symbol
   );
-  event Mint(address _collection, uint256 _tokenId, uint256 timestamp, string _tokenURI);
+  event Mint(address _collection, uint256 _tokenId, uint256 timestamp, string _tokenURI, address owner);
   event Burn(address _collection, uint256 _tokenId, uint256 timestamp);
   event MarketItemCreated(
     address indexed _creator,
@@ -42,13 +48,7 @@ interface IMarketPlace {
     bytes32 _marketItemId,
     uint256 timestamp
   );
-  event MarketItemEnded(
-    address indexed _creator,
-    address indexed _collection,
-    uint256 _tokenId,
-    address _currency,
-    uint256 _finalPriceInEther
-  );
+  event MarketItemEnded(bytes32 marketId, uint256 timestamp);
   event MarketItemCancelled(bytes32 marketId, uint256 timestamp);
   event SaleMade(
     address indexed _seller,
@@ -57,6 +57,15 @@ interface IMarketPlace {
     address _collection,
     address _paymentToken,
     uint256 _amount
+  );
+
+  event OrderMade(
+    address _creator,
+    address _recipient,
+    address _collection,
+    uint256 _tokenId,
+    address _token,
+    uint256 _bidAmount
   );
 
   struct MarketItem {
@@ -76,5 +85,6 @@ interface IMarketPlace {
     uint256 _tokenId;
     address _token;
     uint256 _bidAmount;
+    OrderItemStatus _status;
   }
 }

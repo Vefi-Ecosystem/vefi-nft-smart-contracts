@@ -120,7 +120,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
     uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_msgSender());
     _totalNfts.increment();
-    emit Mint(collection, _tokenId, block.timestamp, tokenURI_);
+    emit Mint(collection, _tokenId, block.timestamp, tokenURI_, _msgSender());
     return true;
   }
 
@@ -132,6 +132,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     onlyMod
   {
     IDeployableCollection(collection).burn(tokenId);
+    _totalNfts.decrement();
     emit Burn(collection, tokenId, block.timestamp);
   }
 
@@ -203,6 +204,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     IERC721(_marketItem._collection).safeTransferFrom(address(this), _msgSender(), _marketItem._tokenId);
     _marketItem._status = MarketItemStatus.FINALIZED;
     _itemsSold.increment();
+    emit MarketItemEnded(_marketId, block.timestamp);
     emit SaleMade(
       _marketItem._creator,
       _msgSender(),
@@ -211,6 +213,42 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _marketItem._currency,
       _buyAmount
     );
+  }
+
+  function placeOffer(
+    address collection,
+    uint256 _tokenId,
+    address _recipient,
+    address _token,
+    uint256 _bidAmount
+  ) external onlyAllowedCollection(collection) onlyActiveCollection(collection) {
+    require(IERC20(_token).allowance(_msgSender(), address(this)) >= _bidAmount, 'NO_ALLOWANCE');
+    bytes32 offerId = keccak256(abi.encode(collection, _tokenId, _msgSender()));
+    _offers[offerId] = OfferItem({
+      _creator: _msgSender(),
+      _recipient: _recipient,
+      _collection: collection,
+      _tokenId: _tokenId,
+      _token: _token,
+      _bidAmount: _bidAmount,
+      _status: OrderItemStatus.STARTED
+    });
+    emit OrderMade(_msgSender(), _recipient, collection, _tokenId, _token, _bidAmount);
+  }
+
+  function acceptOffer(bytes32 _offerId) external {
+    OfferItem storage _offerItem = _offers[_offerId];
+    require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
+    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender(), 'ONLY_OWNER_CAN_FINALIZE');
+    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this), 'NO_ALLOWANCE');
+    require(
+      _safeTransferFrom(_offerItem._token, _offerItem._creator, _msgSender(), _offerItem._bidAmount),
+      'COULD_NOT_TRANSFER_TOKEN'
+    );
+
+    IERC721(_offerItem._collection).safeTransferFrom(_msgSender(), _offerItem._recipient, _offerItem._tokenId);
+
+    _offerItem._status = OrderItemStatus.ACCEPTED;
   }
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
