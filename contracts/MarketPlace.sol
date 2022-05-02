@@ -281,6 +281,14 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit OrderItemCancelled(_offerId, block.timestamp);
   }
 
+  function _addMod(address _mod) external {
+    grantRole(MOD_ROLE, _mod);
+  }
+
+  function _removeMod(address _mod) external {
+    revokeRole(MOD_ROLE, _mod);
+  }
+
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
     (bool success, ) = to.call{value: _value}(new bytes(0));
     require(success, 'COULD_NOT_TRANSFER_ETHER');
@@ -335,6 +343,11 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function takeAccumulatedETH() external onlyAdmin returns (bool) {
     require(_safeTransferETH(_feeReceiver, address(this).balance), 'COULD_NOT_TRANSFER_ETHER');
+    return true;
+  }
+
+  function takeAccumulatedToken(address token) external onlyAdmin returns (bool) {
+    require(_safeTransfer(token, _feeReceiver, IERC20(token).balanceOf(address(this))), 'COULD_NOT_TRANSFER_TOKENS');
     return true;
   }
 
