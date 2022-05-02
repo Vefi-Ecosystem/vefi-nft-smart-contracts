@@ -273,6 +273,14 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit OrderItemRejected(_offerId, block.timestamp);
   }
 
+  function cancelOffer(bytes32 _offerId) external {
+    OfferItem storage _offerItem = _offers[_offerId];
+    require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
+    require(_offerItem._creator == _msgSender(), 'ONLY_ORDER_CREATOR_CAN_CANCEL');
+    _offerItem._status = OrderItemStatus.CANCELLED;
+    emit OrderItemCancelled(_offerId, block.timestamp);
+  }
+
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
     (bool success, ) = to.call{value: _value}(new bytes(0));
     require(success, 'COULD_NOT_TRANSFER_ETHER');
