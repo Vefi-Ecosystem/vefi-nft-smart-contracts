@@ -62,6 +62,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 collectionDeployFeeInEther_,
     address feeReceiver_
   ) {
+    require(IERC20(utilityToken_).totalSupply() > requiredHold_, 'REQUIRED_HOLD_MUST_BE_LESS_THAN_TOTAL_SUPPLY');
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
     _utilityToken = utilityToken_;
@@ -159,7 +160,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     bytes32 _marketId,
     address _receiver,
     uint256 _bidAmount
-  ) external {
+  ) external payable nonReentrant {
     require(_auctions[_marketId]._status == MarketItemStatus.ON_GOING, 'CANCELLED_OR_FINALIZED');
     BidItem storage _bidItem = _bids[_marketId];
 
@@ -168,6 +169,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
         IERC20(_auctions[_marketId]._currency).allowance(_msgSender(), address(this)) >= _bidAmount,
         'NO_ALLOWANCE'
       );
+      _safeTransferFrom(_auctions[_marketId]._currency, _msgSender(), address(this), _bidAmount);
     }
 
     if (_bidItem._createdBy == address(0)) {
