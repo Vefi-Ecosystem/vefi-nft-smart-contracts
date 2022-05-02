@@ -26,7 +26,8 @@ interface IMarketPlace {
   enum OrderItemStatus {
     STARTED,
     ACCEPTED,
-    REJECTED
+    REJECTED,
+    CANCELLED
   }
 
   event CollectionDeployed(
@@ -58,7 +59,6 @@ interface IMarketPlace {
     address _paymentToken,
     uint256 _amount
   );
-
   event OrderMade(
     address _creator,
     address _recipient,
@@ -67,6 +67,9 @@ interface IMarketPlace {
     address _token,
     uint256 _bidAmount
   );
+  event OrderItemEnded(bytes32 orderId, uint256 timestamp);
+  event OrderItemCancelled(bytes32 orderId, uint256 timestamp);
+  event OrderItemRejected(bytes32 orderId, uint256 timestamp);
 
   struct MarketItem {
     address _creator;

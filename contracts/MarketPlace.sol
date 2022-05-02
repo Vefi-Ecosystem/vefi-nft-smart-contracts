@@ -33,6 +33,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   int256 public _percentageForCollectionOwners;
   mapping(bytes32 => MarketItem) public _auctions;
   mapping(bytes32 => OfferItem) public _offers;
+  bytes32[] private allOffers;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -221,9 +222,9 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address _recipient,
     address _token,
     uint256 _bidAmount
-  ) external onlyAllowedCollection(collection) onlyActiveCollection(collection) {
+  ) external onlyAllowedCollection(collection) onlyActiveCollection(collection) returns (bytes32 offerId) {
     require(IERC20(_token).allowance(_msgSender(), address(this)) >= _bidAmount, 'NO_ALLOWANCE');
-    bytes32 offerId = keccak256(abi.encode(collection, _tokenId, _msgSender()));
+    offerId = keccak256(abi.encode(collection, _tokenId, _msgSender()));
     _offers[offerId] = OfferItem({
       _creator: _msgSender(),
       _recipient: _recipient,
@@ -233,6 +234,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _bidAmount: _bidAmount,
       _status: OrderItemStatus.STARTED
     });
+    _offersMade.increment();
+    allOffers.push(offerId);
     emit OrderMade(_msgSender(), _recipient, collection, _tokenId, _token, _bidAmount);
   }
 
@@ -249,6 +252,25 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     IERC721(_offerItem._collection).safeTransferFrom(_msgSender(), _offerItem._recipient, _offerItem._tokenId);
 
     _offerItem._status = OrderItemStatus.ACCEPTED;
+
+    for (uint256 i = 0; i < allOffers.length; i++) {
+      OfferItem storage _innerOfferItem = _offers[allOffers[i]];
+
+      if (_innerOfferItem._tokenId == _offerItem._tokenId) {
+        _innerOfferItem._status = OrderItemStatus.CANCELLED;
+        emit OrderItemCancelled(allOffers[i], block.timestamp);
+      }
+    }
+
+    emit OrderItemEnded(_offerId, block.timestamp);
+  }
+
+  function rejectOffer(bytes32 _offerId) external {
+    OfferItem storage _offerItem = _offers[_offerId];
+    require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
+    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender(), 'NOT_ITEM_OWNER');
+    _offerItem._status = OrderItemStatus.REJECTED;
+    emit OrderItemRejected(_offerId, block.timestamp);
   }
 
   function _safeTransferETH(address to, uint256 _value) private returns (bool) {
@@ -318,6 +340,10 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function totalNFTs() public view returns (uint256) {
     return _totalNfts.current();
+  }
+
+  function totalOffersMade() public view returns (uint256) {
+    return _offersMade.current();
   }
 
   receive() external payable {}
