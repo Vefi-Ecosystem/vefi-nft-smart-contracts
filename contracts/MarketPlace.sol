@@ -163,7 +163,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address _paymentReceiver,
     address _currency,
     uint256 _price
-  ) external payable nonReentrant onlyActiveCollection(collection) onlyAllowedCollection(collection) returns (bool) {
+  ) external nonReentrant onlyActiveCollection(collection) onlyAllowedCollection(collection) returns (bool) {
     require(IERC721(collection).ownerOf(_tokenId) == _msgSender());
     require(IERC721(collection).getApproved(_tokenId) == address(this));
 
