@@ -78,6 +78,11 @@ contract('Marketplace', ([account1, account2, account3]) => {
     );
   });
 
+  it('should revert if a non mod tries to destroy an NFT', async () => {
+    const collection = await marketplace._collections(0);
+    await expectRevert(marketplace.destroyNFT(collection, 1, { from: account2 }), 'ONLY_MOD');
+  });
+
   it('should destroy an NFT', async () => {
     const collection = await marketplace._collections(0);
     expectEvent(await marketplace.destroyNFT(collection, 1), 'Burn');
