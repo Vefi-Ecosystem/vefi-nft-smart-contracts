@@ -34,6 +34,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   mapping(bytes32 => MarketItem) public _auctions;
   mapping(bytes32 => OfferItem) public _offers;
   bytes32[] private allOffers;
+  address[] public _collections;
 
   modifier onlyAdmin() {
     require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), 'ONLY_ADMIN');
@@ -64,7 +65,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 collectionDeployFeeInEther_,
     address feeReceiver_
   ) {
-    require(IERC20(utilityToken_).totalSupply() > requiredHold_, 'REQUIRED_HOLD_MUST_BE_LESS_THAN_TOTAL_SUPPLY');
+    require(IERC20(utilityToken_).totalSupply() > requiredHold_);
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _setupRole(MOD_ROLE, _msgSender());
     _setRoleAdmin(MOD_ROLE, DEFAULT_ADMIN_ROLE);
@@ -84,7 +85,10 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address paymentReceiver_,
     string memory _imageURI
   ) external payable nonReentrant {
-    require(msg.value >= _collectionDeployFeeInEther, 'FEE_TOO_LOW');
+    uint256 _fee = IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
+      ? _collectionDeployFeeInEther.sub((uint256(_percentageDiscount).mul(_collectionDeployFeeInEther)).div(100))
+      : _collectionDeployFeeInEther;
+    require(msg.value >= _fee, 'FEE_TOO_LOW');
     bytes memory _byteCode = abi.encodePacked(
       type(DeployableCollection).creationCode,
       abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_, _imageURI)
@@ -97,28 +101,27 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     }
     _collectionState[_collection] = true;
     _collectionAllowed[_collection] = true;
+    _collections.push(_collection);
     _collectionsDeployed.increment();
     emit CollectionDeployed(_collection, _msgSender(), block.timestamp, name_, category_, symbol_);
   }
 
-  function mintNFT(address collection, string memory tokenURI_)
-    external
-    payable
-    nonReentrant
-    onlyActiveCollection(collection)
-    onlyAllowedCollection(collection)
-    returns (bool)
-  {
+  function mintNFT(
+    address collection,
+    string memory tokenURI_,
+    address _for
+  ) external payable nonReentrant onlyActiveCollection(collection) onlyAllowedCollection(collection) returns (bool) {
     uint256 _fee = IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
       ? _mintFeeInEther.sub((uint256(_percentageDiscount).mul(_mintFeeInEther)).div(100))
       : _mintFeeInEther;
 
-    require(msg.value >= _fee, 'FEE_TOO_LOW');
+    require(msg.value >= _fee);
 
     address _paymentReceiver = IDeployableCollection(collection)._paymentReceiver();
     uint256 _feeForOwner = (uint256(_percentageForCollectionOwners).mul(_fee)).div(100);
-    require(_safeMintFor(collection, tokenURI_, _msgSender()), 'COULD_NOT_MINT');
-    require(_safeTransferETH(_paymentReceiver, _feeForOwner), 'COULD_NOT_TRANSFER_ETHER');
+
+    _safeMintFor(collection, tokenURI_, _for);
+    _safeTransferETH(_paymentReceiver, _feeForOwner);
 
     uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_msgSender());
     _totalNfts.increment();
@@ -160,9 +163,9 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address _paymentReceiver,
     address _currency,
     uint256 _price
-  ) external payable nonReentrant onlyActiveCollection(collection) onlyAllowedCollection(collection) returns (bool) {
-    require(IERC721(collection).ownerOf(_tokenId) == _msgSender(), 'NOT_THE_TOKEN_OWNER');
-    require(IERC721(collection).getApproved(_tokenId) == address(this), 'NOT_APPROVED_TO_SELL_TOKEN');
+  ) external nonReentrant onlyActiveCollection(collection) onlyAllowedCollection(collection) returns (bool) {
+    require(IERC721(collection).ownerOf(_tokenId) == _msgSender());
+    require(IERC721(collection).getApproved(_tokenId) == address(this));
 
     IERC721(collection).safeTransferFrom(_msgSender(), address(this), _tokenId);
     bytes32 marketItemId = keccak256(abi.encode(_msgSender(), collection, _tokenId));
@@ -194,7 +197,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     require(_marketItem._status == MarketItemStatus.ON_GOING, 'MARKET_ITEM_CLOSED');
 
     if (_marketItem._currency == address(0)) {
-      require(msg.value == _marketItem._price, 'NOT_EXACT_PRICE');
+      require(msg.value == _marketItem._price);
       require(_buyAmount == uint256(0) || _buyAmount == msg.value, 'BID_AMOUNT_MUST_BE_ZERO_OR_EQUAL_TO_VALUE');
       _safeTransferETH(_marketItem._paymentReceiver, msg.value);
     } else {
@@ -242,13 +245,11 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function acceptOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
-    require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
-    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender(), 'ONLY_OWNER_CAN_FINALIZE');
-    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this), 'NO_ALLOWANCE');
-    require(
-      _safeTransferFrom(_offerItem._token, _offerItem._creator, _msgSender(), _offerItem._bidAmount),
-      'COULD_NOT_TRANSFER_TOKEN'
-    );
+    require(_offerItem._status == OrderItemStatus.STARTED);
+    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
+    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this));
+
+    _safeTransferFrom(_offerItem._token, _offerItem._creator, _msgSender(), _offerItem._bidAmount);
 
     IERC721(_offerItem._collection).safeTransferFrom(_msgSender(), _offerItem._recipient, _offerItem._tokenId);
 
@@ -269,15 +270,15 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   function rejectOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
     require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
-    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender(), 'NOT_ITEM_OWNER');
+    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
     _offerItem._status = OrderItemStatus.REJECTED;
     emit OrderItemRejected(_offerId, block.timestamp);
   }
 
   function cancelOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
-    require(_offerItem._status == OrderItemStatus.STARTED, 'OFFER_ALREADY_FINALIZED');
-    require(_offerItem._creator == _msgSender(), 'ONLY_ORDER_CREATOR_CAN_CANCEL');
+    require(_offerItem._status == OrderItemStatus.STARTED);
+    require(_offerItem._creator == _msgSender());
     _offerItem._status = OrderItemStatus.CANCELLED;
     emit OrderItemCancelled(_offerId, block.timestamp);
   }
@@ -343,12 +344,12 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   }
 
   function takeAccumulatedETH() external onlyAdmin returns (bool) {
-    require(_safeTransferETH(_feeReceiver, address(this).balance), 'COULD_NOT_TRANSFER_ETHER');
+    _safeTransferETH(_feeReceiver, address(this).balance);
     return true;
   }
 
   function takeAccumulatedToken(address token) external onlyAdmin returns (bool) {
-    require(_safeTransfer(token, _feeReceiver, IERC20(token).balanceOf(address(this))), 'COULD_NOT_TRANSFER_TOKENS');
+    _safeTransfer(token, _feeReceiver, IERC20(token).balanceOf(address(this)));
     return true;
   }
 
@@ -366,6 +367,14 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function totalOffersMade() public view returns (uint256) {
     return _offersMade.current();
+  }
+
+  function setPercentageDiscount(int256 percentageDiscount_) external onlyAdmin {
+    _percentageDiscount = percentageDiscount_;
+  }
+
+  function setRequiredHold(uint256 requiredHold_) external onlyAdmin {
+    _requiredHold = requiredHold_;
   }
 
   receive() external payable {}
