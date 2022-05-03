@@ -17,6 +17,8 @@ interface IMarketPlace {
 
   function _collectionDeployFeeInEther() external view returns (uint256);
 
+  function _collections(uint256) external view returns (address);
+
   enum MarketItemStatus {
     ON_GOING,
     FINALIZED,

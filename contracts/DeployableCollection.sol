@@ -56,7 +56,7 @@ contract DeployableCollection is Context, IDeployableCollection, ERC721URIStorag
   }
 
   function burn(uint256 _tokenId) external onlyMod nonReentrant {
-    require(_exists(_tokenId), 'TOKEN_DOES_NOT_EXIST');
+    require(_exists(_tokenId));
     _burn(_tokenId);
   }
 
