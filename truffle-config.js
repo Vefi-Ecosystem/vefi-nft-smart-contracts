@@ -75,7 +75,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider({
           privateKeys: [process.env.PRIVATE_KEY],
-          providerOrUrl: 'https://data-seed-prebsc-2-s1.binance.org:8545/',
+          providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
         }),
       network_id: 97,
       skipDryRun: true,
@@ -100,7 +100,7 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 3000000,
+          runs: 9000000,
         },
         // evmVersion: "byzantium"
       },

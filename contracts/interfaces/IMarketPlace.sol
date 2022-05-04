@@ -51,7 +51,8 @@ interface IMarketPlace {
     address _collection,
     uint256 _tokenId,
     address _token,
-    uint256 _bidAmount
+    uint256 _bidAmount,
+    bytes32 _orderId
   );
   event OrderItemEnded(bytes32 orderId, uint256 timestamp);
   event OrderItemCancelled(bytes32 orderId, uint256 timestamp);

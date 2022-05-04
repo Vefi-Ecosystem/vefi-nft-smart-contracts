@@ -179,7 +179,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       _status: OrderItemStatus.STARTED
     });
     allOffers.push(offerId);
-    emit OrderMade(_msgSender(), _recipient, collection, _tokenId, _token, _bidAmount);
+    emit OrderMade(_msgSender(), _recipient, collection, _tokenId, _token, _bidAmount, offerId);
   }
 
   function acceptOffer(bytes32 _offerId) external nonReentrant {
