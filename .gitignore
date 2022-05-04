@@ -3,3 +3,4 @@ migrations
 build
 .env
 yarn-error.log
+*Flat.sol
