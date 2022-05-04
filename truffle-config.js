@@ -17,8 +17,8 @@
  * phrase from a file you've .gitignored so it doesn't accidentally become public.
  *
  */
-
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
+require('dotenv').config();
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -70,13 +70,26 @@ module.exports = {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
     // network_id: 2111,   // This network is yours, in the cloud.
     // production: true    // Treats this network as if it was a public net. (default: false)
-    // }
+    // },
+    bsc_testnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://data-seed-prebsc-2-s1.binance.org:8545/',
+        }),
+      network_id: 97,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000,
+    },
   },
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
   },
+  plugins: ['truffle-contract-size'],
 
   // Configure your compilers
   compilers: {
@@ -87,7 +100,7 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 20,
+          runs: 3000000,
         },
         // evmVersion: "byzantium"
       },
