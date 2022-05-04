@@ -10,7 +10,8 @@
     "format": "prettier --write **/**/*.{js,json,sol}",
     "test": "truffle test --network development",
     "compile": "truffle compile",
-    "deploy:bsc:testnet": "truffle deploy --network bsc_testnet"
+    "deploy:bsc:testnet": "truffle deploy --network bsc_testnet",
+    "flatten": "truffle-flattener contracts/MarketPlace.sol > MarketPlaceFlat.sol"
   },
   "repository": {
     "type": "git",
