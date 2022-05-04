@@ -3,10 +3,6 @@ pragma solidity ^0.8.0;
 interface IDeployableCollection {
   function _collectionOwner() external view returns (address);
 
-  function _addMod(address _mod) external returns (bool);
-
-  function _removeMod(address _mod) external returns (bool);
-
   function _imageURI() external view returns (string memory);
 
   function _category() external view returns (bytes32);
@@ -14,8 +10,6 @@ interface IDeployableCollection {
   function _paymentReceiver() external view returns (address payable);
 
   function mintFor(string memory _tokenURI, address to) external returns (uint256);
-
-  function burn(uint256) external;
 
   function lastMintedForIDs(address to) external view returns (uint256);
 }

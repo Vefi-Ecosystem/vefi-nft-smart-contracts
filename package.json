@@ -8,7 +8,9 @@
   },
   "scripts": {
     "format": "prettier --write **/**/*.{js,json,sol}",
-    "test": "truffle test --network development"
+    "test": "truffle test --network development",
+    "compile": "truffle compile",
+    "deploy:bsc:testnet": "truffle deploy --network bsc_testnet"
   },
   "repository": {
     "type": "git",
@@ -30,5 +32,8 @@
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^3.0.0",
     "dotenv": "^16.0.0"
+  },
+  "dependencies": {
+    "truffle-contract-size": "^2.0.1"
   }
 }
