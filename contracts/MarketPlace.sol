@@ -40,7 +40,10 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 collectionDeployFeeInEther_,
     address feeReceiver_
   ) {
-    require(IERC20(utilityToken_).totalSupply() > requiredHold_);
+    if (utilityToken_ != address(0)) {
+      require(IERC20(utilityToken_).totalSupply() > requiredHold_);
+    }
+
     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     _utilityToken = utilityToken_;
     _requiredHold = requiredHold_;
@@ -58,7 +61,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address paymentReceiver_,
     string memory _imageURI
   ) external payable nonReentrant {
-    uint256 _fee = IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
+    uint256 _fee = _utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
       ? _collectionDeployFeeInEther.sub((uint256(_percentageDiscount).mul(_collectionDeployFeeInEther)).div(100))
       : _collectionDeployFeeInEther;
     require(msg.value >= _fee, 'FEE_TOO_LOW');
@@ -80,7 +83,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     string memory tokenURI_,
     address _for
   ) external payable nonReentrant returns (bool) {
-    uint256 _fee = IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
+    uint256 _fee = _utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
       ? _mintFeeInEther.sub((uint256(_percentageDiscount).mul(_mintFeeInEther)).div(100))
       : _mintFeeInEther;
 
@@ -298,6 +301,10 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function setCollectionDeployFee(uint256 collectionDeployFeeInEther_) external onlyAdmin {
     _collectionDeployFeeInEther = collectionDeployFeeInEther_;
+  }
+
+  function setUtilityToken(address utilityToken_) external onlyAdmin {
+    _utilityToken = utilityToken_;
   }
 
   receive() external payable {}
