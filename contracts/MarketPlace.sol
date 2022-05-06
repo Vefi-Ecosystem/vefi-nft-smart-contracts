@@ -127,7 +127,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function cancelSale(bytes32 marketId) external {
     MarketItem storage _marketItem = _auctions[marketId];
-    require(_marketItem._creator == _msgSender(), 'NOT_CREATOR');
+    require(_marketItem._creator == _msgSender());
     _marketItem._creator = address(0);
     _marketItem._paymentReceiver = payable(address(0));
     _marketItem._status = MarketItemStatus.CANCELLED;
@@ -200,7 +200,11 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     for (uint256 i = 0; i < allOffers.length; i++) {
       OfferItem storage _innerOfferItem = _offers[allOffers[i]];
 
-      if (_innerOfferItem._tokenId == _offerItem._tokenId) {
+      if (
+        _innerOfferItem._tokenId == _offerItem._tokenId &&
+        allOffers[i] != _offerId &&
+        _innerOfferItem._status == OrderItemStatus.STARTED
+      ) {
         _innerOfferItem._status = OrderItemStatus.CANCELLED;
         emit OrderItemCancelled(allOffers[i], block.timestamp);
       }
