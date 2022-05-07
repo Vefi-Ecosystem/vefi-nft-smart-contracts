@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 interface IDeployableCollection {
   function _collectionOwner() external view returns (address);
 
-  function _imageURI() external view returns (string memory);
+  function _collectionURI() external view returns (string memory);
 
   function _category() external view returns (bytes32);
 
