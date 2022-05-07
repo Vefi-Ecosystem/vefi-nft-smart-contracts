@@ -13,7 +13,7 @@ contract DeployableCollection is IDeployableCollection, ERC721URIStorage, Reentr
   address public _collectionOwner;
   bytes32 public _category;
   address payable public _paymentReceiver;
-  string public _imageURI;
+  string public _collectionURI;
   mapping(address => uint256) public lastMintedForIDs;
 
   constructor(
@@ -22,12 +22,12 @@ contract DeployableCollection is IDeployableCollection, ERC721URIStorage, Reentr
     address collectionOwner_,
     string memory category_,
     address paymentReceiver_,
-    string memory imageURI_
+    string memory collectionURI_
   ) ERC721(name_, symbol_) {
     _collectionOwner = collectionOwner_;
     _category = keccak256(abi.encode(category_));
     _paymentReceiver = payable(paymentReceiver_);
-    _imageURI = imageURI_;
+    _collectionURI = collectionURI_;
   }
 
   function mintFor(string memory _tokenURI, address to) external nonReentrant returns (uint256 _tokenId) {
