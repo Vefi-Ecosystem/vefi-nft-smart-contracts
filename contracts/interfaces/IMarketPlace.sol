@@ -30,7 +30,7 @@ interface IMarketPlace {
     address indexed _collection,
     uint256 _tokenId,
     address _currency,
-    uint256 _PriceInEther,
+    uint256 _price,
     bytes32 _marketItemId,
     uint256 timestamp
   );

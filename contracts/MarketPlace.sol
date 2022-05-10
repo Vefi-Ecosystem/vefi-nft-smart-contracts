@@ -74,6 +74,9 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
     assembly {
       _collection := create2(0, add(_byteCode, 32), mload(_byteCode), _salt)
+      if iszero(extcodesize(_collection)) {
+        revert(0, 0)
+      }
     }
     emit CollectionDeployed(_collection, _msgSender(), block.timestamp, name_, category_, symbol_);
   }
@@ -87,7 +90,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       ? _mintFeeInEther.sub((uint256(_percentageDiscount).mul(_mintFeeInEther)).div(100))
       : _mintFeeInEther;
 
-    require(msg.value >= _fee, 'FEE_TOO_LOW');
+    require(msg.value >= _fee);
 
     address _paymentReceiver = IDeployableCollection(collection)._paymentReceiver();
     uint256 _feeForOwner = (uint256(_percentageForCollectionOwners).mul(_fee)).div(100);
@@ -95,7 +98,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     _safeMintFor(collection, tokenURI_, _for);
     _safeTransferETH(_paymentReceiver, _feeForOwner);
 
-    uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_msgSender());
+    uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_for);
     emit Mint(collection, _tokenId, block.timestamp, tokenURI_, _msgSender());
     return true;
   }
@@ -108,7 +111,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 _price
   ) external nonReentrant returns (bool) {
     require(IERC721(collection).ownerOf(_tokenId) == _msgSender());
-    require(IERC721(collection).getApproved(_tokenId) == address(this), 'NO_ALLOWANCE');
+    require(IERC721(collection).getApproved(_tokenId) == address(this));
 
     IERC721(collection).safeTransferFrom(_msgSender(), address(this), _tokenId);
     bytes32 marketItemId = keccak256(abi.encode(_msgSender(), collection, _tokenId));
@@ -265,10 +268,10 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     string memory _tokenURI,
     address to
   ) private returns (bool) {
-    (bool success, bytes memory data) = collection.call(
+    (bool success, ) = collection.call(
       abi.encodeWithSelector(bytes4(keccak256(bytes('mintFor(string,address)'))), _tokenURI, to)
     );
-    require(success && (data.length == 0 || abi.decode(data, (bool))));
+    require(success);
     return true;
   }
 
