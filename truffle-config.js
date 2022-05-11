@@ -83,6 +83,18 @@ module.exports = {
       timeoutBlocks: 200000,
       networkCheckTimeout: 200000,
     },
+    brise_testnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://testnet-rpc.brisescan.com',
+        }),
+      network_id: 64668,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000,
+    },
   },
 
   // Set default mocha options here, use special reporters etc.
