@@ -135,6 +135,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     _marketItem._paymentReceiver = payable(address(0));
     _marketItem._status = MarketItemStatus.CANCELLED;
 
+    IERC721(_marketItem._collection).safeTransferFrom(address(this), _msgSender(), _marketItem._tokenId);
+
     emit MarketItemCancelled(marketId, block.timestamp);
   }
 
@@ -191,8 +193,8 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
   function acceptOffer(bytes32 _offerId) external nonReentrant {
     OfferItem storage _offerItem = _offers[_offerId];
     require(_offerItem._status == OrderItemStatus.STARTED);
-    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender(), 'NOT_OWNER');
-    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this), 'NO_ALLOWANCE');
+    require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
+    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this));
 
     _safeTransferFrom(_offerItem._token, _offerItem._creator, _msgSender(), _offerItem._bidAmount);
 

@@ -11,6 +11,7 @@
     "test": "truffle test --network development",
     "compile": "rm -rf build && truffle compile",
     "deploy:bsc:testnet": "truffle deploy --network bsc_testnet",
+    "deploy:brise:testnet": "truffle deploy --network brise_testnet",
     "flatten": "truffle-flattener contracts/MarketPlace.sol > MarketPlaceFlat.sol"
   },
   "repository": {
