@@ -22,7 +22,7 @@ contract('Marketplace', ([account1, account2, account3]) => {
 
   it('should deploy collection', async () => {
     await marketplace.deployCollection('COLLECTION 1', 'C1', 'GENERAL', account2, 'NO_URI', {
-      value: web3.utils.toWei('0.005'),
+      value: web3.utils.toWei('0.005')
     });
     const collection = await marketplace._collections(0);
     const callValue1 = await web3.eth.call({ to: collection, data: web3.utils.sha3('name()') });
@@ -48,13 +48,13 @@ contract('Marketplace', ([account1, account2, account3]) => {
         inputs: [
           {
             type: 'address',
-            name: 'to',
+            name: 'to'
           },
           {
             type: 'uint256',
-            name: 'tokenId',
-          },
-        ],
+            name: 'tokenId'
+          }
+        ]
       },
       [marketplace.address, 1]
     );
@@ -63,7 +63,7 @@ contract('Marketplace', ([account1, account2, account3]) => {
       from: account1,
       to: collection,
       value: web3.utils.toWei('0'),
-      data: encodedCall,
+      data: encodedCall
     });
 
     expectEvent(
