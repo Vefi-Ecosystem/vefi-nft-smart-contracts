@@ -61,10 +61,20 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address paymentReceiver_,
     string memory _collectionURI
   ) external payable nonReentrant {
-    uint256 _fee = _utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
-      ? _collectionDeployFeeInEther.sub((uint256(_percentageDiscount).mul(_collectionDeployFeeInEther)).div(100))
-      : _collectionDeployFeeInEther;
+    uint256 _discount;
+
+    if (_utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold) {
+      _discount = uint256(_percentageDiscount).mul(_collectionDeployFeeInEther).div(100);
+    }
+
+    uint256 _fee = _collectionDeployFeeInEther.sub(_discount);
+
     require(msg.value >= _fee, 'FEE_TOO_LOW');
+
+    if (_discount > 0) {
+      _safeTransferETH(_msgSender(), _discount);
+    }
+
     bytes memory _byteCode = abi.encodePacked(
       type(DeployableCollection).creationCode,
       abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_, _collectionURI)
@@ -86,11 +96,19 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     string memory tokenURI_,
     address _for
   ) external payable nonReentrant returns (bool) {
-    uint256 _fee = _utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold
-      ? _mintFeeInEther.sub((uint256(_percentageDiscount).mul(_mintFeeInEther)).div(100))
-      : _mintFeeInEther;
+    uint256 _discount;
+
+    if (_utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold) {
+      _discount = uint256(_percentageDiscount).mul(_mintFeeInEther).div(100);
+    }
+
+    uint256 _fee = _mintFeeInEther.sub(_discount);
 
     require(msg.value >= _fee);
+
+    if (_discount > 0) {
+      _safeTransferETH(_msgSender(), _discount);
+    }
 
     address _paymentReceiver = IDeployableCollection(collection)._paymentReceiver();
     uint256 _feeForOwner = (uint256(_percentageForCollectionOwners).mul(_fee)).div(100);
@@ -99,7 +117,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     _safeTransferETH(_paymentReceiver, _feeForOwner);
 
     uint256 _tokenId = IDeployableCollection(collection).lastMintedForIDs(_for);
-    emit Mint(collection, _tokenId, block.timestamp, tokenURI_, _msgSender());
+    emit Mint(collection, _tokenId, block.timestamp, tokenURI_, _for);
     return true;
   }
 
