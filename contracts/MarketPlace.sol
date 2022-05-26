@@ -212,7 +212,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     OfferItem storage _offerItem = _offers[_offerId];
     require(_offerItem._status == OrderItemStatus.STARTED);
     require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
-    require(IERC721(_offerItem._collection).getApproved(_offerItem._tokenId) == address(this));
+    require(IERC721(_offerItem._collection).isApprovedForAll(_msgSender(), address(this)));
 
     _safeTransferFrom(_offerItem._token, _offerItem._creator, _msgSender(), _offerItem._bidAmount);
 
