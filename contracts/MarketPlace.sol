@@ -129,7 +129,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 _price
   ) external nonReentrant returns (bool) {
     require(IERC721(collection).ownerOf(_tokenId) == _msgSender());
-    require(IERC721(collection).getApproved(_tokenId) == address(this));
+    require(IERC721(collection).isApprovedForAll(_msgSender(), address(this)));
 
     IERC721(collection).safeTransferFrom(_msgSender(), address(this), _tokenId);
     bytes32 marketItemId = keccak256(abi.encode(_msgSender(), collection, _tokenId));

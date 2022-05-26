@@ -75,7 +75,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider({
           privateKeys: [process.env.PRIVATE_KEY],
-          providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/'
+          providerOrUrl: 'wss://data-seed-prebsc-2-s1.binance.org:8545'
         }),
       network_id: 97,
       skipDryRun: true,
@@ -106,6 +106,18 @@ module.exports = {
       confirmations: 2,
       timeoutBlocks: 200000,
       networkCheckTimeout: 200000
+    },
+    rinkeby: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'wss://rinkeby.infura.io/ws/v3/24d9c02b75644a4a9422d33a2f5d0260'
+        }),
+      network_id: 4,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000
     }
   },
 
@@ -124,7 +136,7 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 600000000
+          runs: 4294967295
         }
         // evmVersion: "byzantium"
       }
