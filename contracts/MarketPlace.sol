@@ -79,7 +79,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
       type(DeployableCollection).creationCode,
       abi.encode(name_, symbol_, _msgSender(), category_, paymentReceiver_, _collectionURI)
     );
-    bytes32 _salt = keccak256(abi.encode(name_, _msgSender()));
+    bytes32 _salt = keccak256(abi.encode(name_, symbol_, category_, _msgSender(), block.timestamp));
     address _collection;
 
     assembly {
@@ -132,7 +132,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     require(IERC721(collection).isApprovedForAll(_msgSender(), address(this)));
 
     IERC721(collection).safeTransferFrom(_msgSender(), address(this), _tokenId);
-    bytes32 marketItemId = keccak256(abi.encode(_msgSender(), collection, _tokenId));
+    bytes32 marketItemId = keccak256(abi.encode(_msgSender(), collection, _tokenId, block.timestamp));
     _auctions[marketItemId] = MarketItem({
       _creator: _msgSender(),
       _paymentReceiver: payable(_paymentReceiver),
@@ -194,7 +194,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     uint256 _bidAmount
   ) external returns (bytes32 offerId) {
     require(IERC20(_token).allowance(_msgSender(), address(this)) >= _bidAmount);
-    offerId = keccak256(abi.encode(collection, _tokenId, _msgSender()));
+    offerId = keccak256(abi.encode(collection, _tokenId, _msgSender(), block.timestamp));
     _offers[offerId] = OfferItem({
       _creator: _msgSender(),
       _recipient: _recipient,
@@ -225,6 +225,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
       if (
         _innerOfferItem._tokenId == _offerItem._tokenId &&
+        _innerOfferItem._collection == _offerItem._collection &&
         allOffers[i] != _offerId &&
         _innerOfferItem._status == OrderItemStatus.STARTED
       ) {
@@ -238,7 +239,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function rejectOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
-    require(_offerItem._status == OrderItemStatus.STARTED, 'FINALIZED');
+    require(_offerItem._status == OrderItemStatus.STARTED);
     require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
     _offerItem._status = OrderItemStatus.REJECTED;
     emit OrderItemRejected(_offerId, block.timestamp);
@@ -246,7 +247,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
   function cancelOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
-    require(_offerItem._status == OrderItemStatus.STARTED, 'FINALIZED');
+    require(_offerItem._status == OrderItemStatus.STARTED);
     require(_offerItem._creator == _msgSender());
     _offerItem._status = OrderItemStatus.CANCELLED;
     emit OrderItemCancelled(_offerId, block.timestamp);
