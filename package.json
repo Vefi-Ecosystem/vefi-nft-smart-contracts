@@ -14,7 +14,8 @@
     "deploy:brise:testnet": "truffle deploy --network brise_testnet",
     "deploy:mumbai": "truffle deploy --network mumbai",
     "deploy:rinkeby": "truffle deploy --network rinkeby",
-    "deploy:all:testnets": "yarn deploy:bsc:testnet && yarn deploy:mumbai && yarn deploy:rinkeby",
+    "deploy:aurora:testnet": "truffle deploy --network aurora_testnet",
+    "deploy:all:testnets": "yarn deploy:bsc:testnet && yarn deploy:mumbai && yarn deploy:rinkeby && yarn deploy:aurora:testnet && yarn deploy:brise:testnet",
     "flatten": "truffle-flattener contracts/MarketPlace.sol > MarketPlaceFlat.sol"
   },
   "repository": {

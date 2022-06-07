@@ -87,7 +87,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider({
           privateKeys: [process.env.PRIVATE_KEY],
-          providerOrUrl: 'https://testnet-rpc.brisescan.com'
+          providerOrUrl: 'wss://testnet-rpc.brisescan.com'
         }),
       network_id: 64668,
       skipDryRun: true,
@@ -114,6 +114,18 @@ module.exports = {
           providerOrUrl: 'wss://rinkeby.infura.io/ws/v3/24d9c02b75644a4a9422d33a2f5d0260'
         }),
       network_id: 4,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000
+    },
+    aurora_testnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://aurora-testnet.infura.io/v3/640857cffd0a42d9b880442dc709d97e'
+        }),
+      network_id: 1313161555,
       skipDryRun: true,
       confirmations: 2,
       timeoutBlocks: 200000,
