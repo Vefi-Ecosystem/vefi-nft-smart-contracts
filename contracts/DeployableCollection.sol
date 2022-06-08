@@ -37,4 +37,10 @@ contract DeployableCollection is IDeployableCollection, ERC721URIStorage, Reentr
     _setTokenURI(_tokenId, _tokenURI);
     lastMintedForIDs[to] = _tokenId;
   }
+
+  function burn(uint256 _tokenId) external {
+    require(_msgSender() == _collectionOwner);
+    require(_exists(_tokenId));
+    _burn(_tokenId);
+  }
 }

@@ -69,7 +69,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
 
     uint256 _fee = _collectionDeployFeeInEther.sub(_discount);
 
-    require(msg.value >= _fee, 'FEE_TOO_LOW');
+    require(msg.value >= _fee);
 
     if (_discount > 0) {
       _safeTransferETH(_msgSender(), _discount);
@@ -127,7 +127,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address _paymentReceiver,
     address _currency,
     uint256 _price
-  ) external nonReentrant returns (bool) {
+  ) external returns (bool) {
     require(IERC721(collection).ownerOf(_tokenId) == _msgSender());
     require(IERC721(collection).isApprovedForAll(_msgSender(), address(this)));
 
@@ -158,19 +158,22 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit MarketItemCancelled(marketId, block.timestamp);
   }
 
-  function buyItem(bytes32 _marketId, uint256 _buyAmount) external payable nonReentrant {
+  function buyItem(bytes32 _marketId, uint256 _buyAmount) external payable {
     MarketItem storage _marketItem = _auctions[_marketId];
-    require(_marketItem._status == MarketItemStatus.ON_GOING, 'FINALIZED');
+    require(_marketItem._status == MarketItemStatus.ON_GOING);
 
     if (_marketItem._currency == address(0)) {
       require(msg.value == _marketItem._price);
       require(_buyAmount == uint256(0) || _buyAmount == msg.value);
-      _safeTransferETH(_marketItem._paymentReceiver, msg.value);
+      uint256 _5Percent = (msg.value * 5) / 100;
+      _safeTransferETH(_marketItem._paymentReceiver, msg.value.sub(_5Percent));
     } else {
       require(_buyAmount == _marketItem._price);
       require(IERC20(_marketItem._currency).balanceOf(_msgSender()) >= _buyAmount);
-      require(IERC20(_marketItem._currency).allowance(_msgSender(), address(this)) >= _buyAmount, 'NO_ALLOWANCE');
-      _safeTransferFrom(_marketItem._currency, _msgSender(), _marketItem._paymentReceiver, _buyAmount);
+      require(IERC20(_marketItem._currency).allowance(_msgSender(), address(this)) >= _buyAmount);
+      uint256 _5Percent = (_buyAmount * 5) / 100;
+      _safeTransferFrom(_marketItem._currency, _msgSender(), _marketItem._paymentReceiver, _buyAmount.sub(_5Percent));
+      _safeTransferFrom(_marketItem._currency, _msgSender(), address(this), _5Percent);
     }
     IERC721(_marketItem._collection).safeTransferFrom(address(this), _msgSender(), _marketItem._tokenId);
     _marketItem._status = MarketItemStatus.FINALIZED;
@@ -208,7 +211,7 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     emit OrderMade(_msgSender(), _recipient, collection, _tokenId, _token, _bidAmount, offerId);
   }
 
-  function acceptOffer(bytes32 _offerId) external nonReentrant {
+  function acceptOffer(bytes32 _offerId) external {
     OfferItem storage _offerItem = _offers[_offerId];
     require(_offerItem._status == OrderItemStatus.STARTED);
     require(IERC721(_offerItem._collection).ownerOf(_offerItem._tokenId) == _msgSender());
