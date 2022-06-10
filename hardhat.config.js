@@ -32,6 +32,18 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
       timeout: 70000,
       chainId: 43114
+    },
+    clover_mainnet: {
+      url: 'https://api-para.clover.finance',
+      accounts: [process.env.PRIVATE_KEY],
+      timeout: 70000,
+      chainId: 1024
+    },
+    matic_mainnet: {
+      url: 'https://polygon-rpc.com/',
+      accounts: [process.env.PRIVATE_KEY],
+      timeout: 70000,
+      chainId: 137
     }
   },
   paths: {
