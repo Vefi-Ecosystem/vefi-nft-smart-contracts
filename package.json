@@ -10,12 +10,19 @@
     "format": "prettier --write **/**/*.{js,json,sol}",
     "test": "truffle test --network development",
     "compile": "rm -rf build && truffle compile",
+    "compile:hardhat": "rm -rf build && npx hardhat compile",
     "deploy:bsc:testnet": "truffle deploy --network bsc_testnet",
     "deploy:brise:testnet": "truffle deploy --network brise_testnet",
     "deploy:mumbai": "truffle deploy --network mumbai",
     "deploy:rinkeby": "truffle deploy --network rinkeby",
     "deploy:aurora:testnet": "truffle deploy --network aurora_testnet",
     "deploy:all:testnets": "yarn deploy:bsc:testnet && yarn deploy:mumbai && yarn deploy:rinkeby && yarn deploy:aurora:testnet && yarn deploy:brise:testnet",
+    "deploy:brise:mainnet": "npx hardhat run --network brise_mainnet hardhat_scripts/deploy.js",
+    "deploy:bsc:mainnet": "npx hardhat run --network binance_mainnet hardhat_scripts/deploy.js",
+    "deploy:avax:mainnet": "npx hardhat run --network avalanche_mainnet hardhat_scripts/deploy.js",
+    "deploy:clover:mainnet": "npx hardhat run --network clover_mainnet hardhat_scripts/deploy.js",
+    "deploy:matic:mainnet": "npx hardhat run --network matic_mainnet hardhat_scripts/deploy.js",
+    "deploy:all:mainnets": "yarn deploy:brise:mainnet && yarn deploy:bsc:mainnet && yarn deploy:avax:mainnet",
     "flatten": "truffle-flattener contracts/MarketPlace.sol > MarketPlaceFlat.sol"
   },
   "repository": {
@@ -30,14 +37,18 @@
   },
   "homepage": "https://github.com/Vefi-Ecosystem/vefi-nft-smart-contracts#readme",
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/test-helpers": "^0.5.15",
-    "@truffle/hdwallet-provider": "^2.0.8",
+    "@truffle/hdwallet-provider": "^2.0.9",
     "bignumber.js": "^9.0.2",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^3.0.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "ethers": "^5.6.8",
+    "hardhat": "^2.9.9"
   },
   "dependencies": {
     "truffle-contract-size": "^2.0.1"

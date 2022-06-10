@@ -4,3 +4,6 @@ build
 .env
 yarn-error.log
 *Flat.sol
+cache
+hardhat_scripts
+contract_addresses_references.json
