@@ -95,11 +95,15 @@ contract MarketPlace is IMarketPlace, IERC721Receiver, Context, AccessControl, R
     address collection,
     string memory tokenURI_,
     address _for
-  ) external payable nonReentrant returns (bool) {
+  ) external payable returns (bool) {
     uint256 _discount;
 
     if (_utilityToken != address(0) && IERC20(_utilityToken).balanceOf(_msgSender()) >= _requiredHold) {
       _discount = uint256(_percentageDiscount).mul(_mintFeeInEther).div(100);
+    }
+
+    if (IDeployableCollection(collection)._collectionOwner() == _msgSender()) {
+      _discount = _discount.add(uint256(70).mul(_mintFeeInEther).div(100));
     }
 
     uint256 _fee = _mintFeeInEther.sub(_discount);

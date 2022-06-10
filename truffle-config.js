@@ -130,6 +130,42 @@ module.exports = {
       confirmations: 2,
       timeoutBlocks: 200000,
       networkCheckTimeout: 200000
+    },
+    brise_mainnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://chainrpc.com'
+        }),
+      network_id: 32520,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000
+    },
+    binance_mainnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://bsc-dataseed.binance.org/'
+        }),
+      network_id: 56,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000
+    },
+    avalanche_mainnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env.PRIVATE_KEY],
+          providerOrUrl: 'https://api.avax.network/ext/bc/C/rpc'
+        }),
+      network_id: 43114,
+      skipDryRun: true,
+      confirmations: 2,
+      timeoutBlocks: 200000,
+      networkCheckTimeout: 200000
     }
   },
 
