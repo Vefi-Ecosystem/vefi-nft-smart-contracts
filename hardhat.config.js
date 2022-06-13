@@ -44,6 +44,18 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
       timeout: 70000,
       chainId: 137
+    },
+    telos_mainnet: {
+      url: 'https://rpc.telosarabia.net/evm',
+      accounts: [process.env.PRIVATE_KEY],
+      timeout: 70000,
+      chainId: 40
+    },
+    gatechain_mainnet: {
+      url: 'https://evm.gatenode.cc',
+      accounts: [process.env.PRIVATE_KEY],
+      timeout: 70000,
+      chainId: 86
     }
   },
   paths: {

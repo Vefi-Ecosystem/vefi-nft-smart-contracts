@@ -22,6 +22,8 @@
     "deploy:avax:mainnet": "npx hardhat run --network avalanche_mainnet hardhat_scripts/deploy.js",
     "deploy:clover:mainnet": "npx hardhat run --network clover_mainnet hardhat_scripts/deploy.js",
     "deploy:matic:mainnet": "npx hardhat run --network matic_mainnet hardhat_scripts/deploy.js",
+    "deploy:telos:mainnet": "npx hardhat run --network telos_mainnet hardhat_scripts/deploy.js",
+    "deploy:gate:mainnet": "npx hardhat run --network gatechain_mainnet hardhat_scripts/deploy.js",
     "deploy:all:mainnets": "yarn deploy:brise:mainnet && yarn deploy:bsc:mainnet && yarn deploy:avax:mainnet",
     "flatten": "truffle-flattener contracts/MarketPlace.sol > MarketPlaceFlat.sol"
   },
